@@ -7,8 +7,13 @@ function setGuestStats(guestId: number, stat: GuestStat, value: number) {
   guest[stat] = v;
 }
 
-export function setAllGuestStats(stat: GuestStat, value: number) {
-  map.getAllEntities("guest").forEach((guest) => {
+export function setAllGuestStats(
+  stat: GuestStat,
+  value: number,
+  guests?: Guest[]
+) {
+  const g = guests ?? map.getAllEntities("guest");
+  g.forEach((guest) => {
     setGuestStats(guest.id ?? 0, stat, value);
   });
 }

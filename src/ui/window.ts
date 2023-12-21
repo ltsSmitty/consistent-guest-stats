@@ -1,19 +1,17 @@
 import {
   WindowTemplate,
-  box,
   groupbox,
   horizontal,
   window,
-  label,
   toggle,
   compute,
+  label,
 } from "openrct2-flexui";
 import { combinedLabelSpinner } from "./utilityControls";
 import { GuestStat, Model } from "../viewModels/model";
 import { capitalizeFirstLetter } from "../utils";
 
 const title = "Consistent Guest Stats";
-const LINE_HEIGHT = 20;
 const TOGGLE_SIZE = 14;
 
 const UpdateFrequencyKeys: string[] = [
@@ -29,32 +27,17 @@ const UpdateFrequencyKeys: string[] = [
 export const mainWindow = (model: Model): WindowTemplate => {
   return window({
     title,
-    width: 300,
-    height: 200,
+    width: 185,
+    height: 210,
     content: [
       groupbox({
         text: "Maintain stats",
+
         content: [
-          // horizontal({
-          //   padding: { top: 10 },
-          //   content: [
-          //     label({ text: "Guest stat" }),
-          //     label({ text: "Enabled", padding: { left: 50 } }),
-          //   ],
-          // }),
           horizontal({
             content: [
-              combinedLabelSpinner(100, 100, {
-                text: "Happiness",
-                minimum: 0,
-                maximum: 16,
-                value: 16,
-                wrapMode: "clamp",
-              }),
-              toggle({
-                height: TOGGLE_SIZE,
-                width: TOGGLE_SIZE,
-              }),
+              statLabelSpinner("happiness", model),
+              statToggle("happiness", model),
             ],
           }),
           horizontal({
@@ -63,8 +46,44 @@ export const mainWindow = (model: Model): WindowTemplate => {
               statToggle("energy", model),
             ],
           }),
+          horizontal({
+            content: [
+              statLabelSpinner("hunger", model),
+              statToggle("hunger", model),
+            ],
+          }),
+          horizontal({
+            content: [
+              statLabelSpinner("thirst", model),
+              statToggle("thirst", model),
+            ],
+          }),
+          horizontal({
+            content: [
+              statLabelSpinner("nausea", model),
+              statToggle("nausea", model),
+            ],
+          }),
+          horizontal({
+            content: [
+              statLabelSpinner("toilet", model),
+              statToggle("toilet", model),
+            ],
+          }),
         ],
-        // horizontal({}),
+      }),
+      groupbox({
+        text: "Stat reset frequency",
+        content: [
+          horizontal({
+            content: [frequencyLabelSpinner(model)],
+          }),
+        ],
+      }),
+      label({
+        text: " plugin by ltsSmitty",
+        alignment: "centred",
+        disabled: true,
       }),
     ],
   });
@@ -74,6 +93,7 @@ const statToggle = (stat: GuestStat, model: Model) => {
   return toggle({
     height: TOGGLE_SIZE,
     width: TOGGLE_SIZE,
+    isPressed: compute(model.stats[stat], (stat) => stat.enabled),
     onChange: (value) => {
       model.updateEnabled(stat, value);
     },
@@ -81,11 +101,11 @@ const statToggle = (stat: GuestStat, model: Model) => {
 };
 
 const statLabelSpinner = (stat: GuestStat, model: Model) => {
-  return combinedLabelSpinner(100, 100, {
+  return combinedLabelSpinner(80, 60, {
     text: capitalizeFirstLetter(stat),
     minimum: 0,
     maximum: 16,
-    value: 16,
+    value: compute(model.stats[stat], (stat) => stat.value),
     wrapMode: "clamp",
     onChange: (value) => {
       model.updateValue(stat, value);
@@ -94,7 +114,7 @@ const statLabelSpinner = (stat: GuestStat, model: Model) => {
 };
 
 const frequencyLabelSpinner = (model: Model) => {
-  return combinedLabelSpinner(100, 100, {
+  return combinedLabelSpinner(100, 59, {
     text: compute(
       model.updateFrequency,
       (stat) => UpdateFrequencyKeys[stat ?? 3]

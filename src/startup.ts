@@ -1,12 +1,6 @@
 import { mainWindow } from "./ui/window";
 import { Model } from "./viewModels/model";
 
-function onClickMenuItem() {
-  // Write code here that should happen when the player clicks the menu item under the map icon.
-
-  console.log("Hello world!");
-}
-
 function openWindow(model: Model) {
   if (context.apiVersion < 59) {
     // 59 => https://github.com/OpenRCT2/OpenRCT2/pull/17821
