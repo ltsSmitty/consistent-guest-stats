@@ -89,7 +89,7 @@ export class Model {
     });
     const lastGuest = map.getEntity(this.lastBiggestGuestId) as Guest; // start from the most recent guest from the last day
 
-    const firstNewGuestIndex = this.guests.indexOf(lastGuest.id ?? 0);
+    const firstNewGuestIndex = this.guests.indexOf(lastGuest?.id ?? 0);
     const newGuests = this.guests.slice(firstNewGuestIndex + 1);
 
     // split any new guests into the proper arrays
