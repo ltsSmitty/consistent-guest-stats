@@ -1,19 +1,37 @@
-import { GuestStat } from "./viewModels/model";
+import { GuestID, GuestStat } from "./viewModels/model";
 
-function setGuestStats(guestId: number, stat: GuestStat, value: number) {
+function setGuestStats(guest: Guest, stat: GuestStat, value: number) {
   const v = value > 0 && value <= 16 ? value * 16 - 1 : 0;
-
-  const guest = map.getEntity(guestId) as Guest;
   guest[stat] = v;
 }
 
 export function setAllGuestStats(
   stat: GuestStat,
   value: number,
-  guests?: Guest[]
+  guests?: GuestID[]
 ) {
-  const g = guests ?? map.getAllEntities("guest");
+  const g: Guest[] = [];
+
+  if (guests) {
+    console.log(`Updating stats for ${guests.length} guests`);
+
+    guests.forEach((guestId) => {
+      const guest = map.getEntity(guestId) as Guest;
+      if (!guest) {
+        console.log(`Guest ${guestId} not found`);
+      } else {
+        g.push(guest);
+      }
+    });
+  } else {
+    g.push(...map.getAllEntities("guest"));
+  }
+
   g.forEach((guest) => {
-    setGuestStats(guest.id ?? 0, stat, value);
+    if (!guest) {
+      console.log(`Hmm, guest not found`);
+    } else {
+      setGuestStats(guest ?? 0, stat, value);
+    }
   });
 }

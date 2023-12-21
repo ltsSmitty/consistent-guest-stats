@@ -26,6 +26,8 @@ export enum UpdateFrequency {
 
 type StatValues = { [key in GuestStat]: WritableStore<StatParam> };
 
+export type GuestID = number;
+
 export class Model {
   updateFrequency = store<UpdateFrequency>(3);
 
@@ -38,79 +40,90 @@ export class Model {
     toilet: store<StatParam>({ value: 0, enabled: false }),
   };
 
+  constructor() {
+    this.initArrays();
+  }
+
   tick = 0;
+
+  guests: GuestID[] = [];
+  everyOtherGuests: GuestID[][] = new Array(2);
+  everyFifthGuests: GuestID[][] = new Array(5);
+  everySeventhGuests: GuestID[][] = new Array(7);
+  everyTwentyEighthGuests: GuestID[][] = new Array(28);
+
+  initArrays = () => {
+    for (let i = 0; i < 2; i++) {
+      this.everyOtherGuests[i] = [];
+    }
+    for (let i = 0; i < 5; i++) {
+      this.everyFifthGuests[i] = [];
+    }
+    for (let i = 0; i < 7; i++) {
+      this.everySeventhGuests[i] = [];
+    }
+    for (let i = 0; i < 28; i++) {
+      this.everyTwentyEighthGuests[i] = [];
+    }
+  };
+
+  updateGuestStats = (guestIds: GuestID[]) => {
+    Object.keys(this.stats).forEach((stat) => {
+      const value = this.stats[stat as GuestStat].get().value;
+      if (this.stats[stat as GuestStat].get().enabled) {
+        setAllGuestStats(stat as GuestStat, value, guestIds);
+      }
+    });
+  };
+
+  lastBiggestGuestId = 0;
+
+  daySubcription = context.subscribe("interval.day", () => {
+    if (date.day % 2 == 0) {
+      this.initArrays();
+    }
+
+    // add any new guests to the arrays each day
+    this.guests = map.getAllEntities("guest").map((guest) => {
+      return guest.id ?? 0;
+    });
+    const lastGuest = map.getEntity(this.lastBiggestGuestId) as Guest; // start from the most recent guest from the last day
+
+    const firstNewGuestIndex = this.guests.indexOf(lastGuest.id ?? 0);
+    const newGuests = this.guests.slice(firstNewGuestIndex + 1);
+
+    // split any new guests into the proper arrays
+    newGuests.forEach((id) => {
+      if (!id) return;
+      this.everyOtherGuests[id % 2].push(id);
+      this.everyFifthGuests[id % 5].push(id);
+      this.everySeventhGuests[id % 7].push(id);
+      this.everyTwentyEighthGuests[id % 28].push(id);
+    });
+
+    if (this.updateFrequency.get() === UpdateFrequency.Daily) {
+      this.updateGuestStats(this.guests);
+    } else if (this.updateFrequency.get() === UpdateFrequency.Every2Days) {
+      this.updateGuestStats(this.everyOtherGuests[date.day % 2]);
+    } else if (this.updateFrequency.get() === UpdateFrequency.Weekly) {
+      this.updateGuestStats(this.everySeventhGuests[date.day % 7]);
+    } else if (this.updateFrequency.get() === UpdateFrequency.Monthly) {
+      this.updateGuestStats(this.everyTwentyEighthGuests[date.day % 28]);
+    }
+
+    // update the last biggest guest id
+    this.lastBiggestGuestId = this.guests[this.guests.length - 1] ?? 0;
+  });
 
   tickSubcription = context.subscribe("interval.tick", () => {
     if (this.updateFrequency.get() === UpdateFrequency.EveryTick) {
-      Object.keys(this.stats).forEach((stat) => {
-        const value = this.stats[stat as GuestStat].get().value;
-        if (this.stats[stat as GuestStat].get().enabled) {
-          setAllGuestStats(stat as GuestStat, value);
-        }
-      });
+      this.updateGuestStats(this.guests);
     } else if (this.updateFrequency.get() === UpdateFrequency.EveryOtherTick) {
-      const guests = map.getAllEntities("guest").filter((guest) => {
-        guest.id && guest.id % 2 === 0;
-      });
-      Object.keys(this.stats).forEach((stat) => {
-        const value = this.stats[stat as GuestStat].get().value;
-        if (this.stats[stat as GuestStat].get().enabled) {
-          setAllGuestStats(stat as GuestStat, value, guests);
-        }
-      });
+      this.updateGuestStats(this.everyOtherGuests[this.tick % 2]);
     } else if (this.updateFrequency.get() === UpdateFrequency.EveryFiveTicks) {
-      const guests = map.getAllEntities("guest").filter((guest) => {
-        guest.id && guest.id % 5 === 0;
-      });
-      Object.keys(this.stats).forEach((stat) => {
-        const value = this.stats[stat as GuestStat].get().value;
-        if (this.stats[stat as GuestStat].get().enabled) {
-          setAllGuestStats(stat as GuestStat, value, guests);
-        }
-      });
+      this.updateGuestStats(this.everyFifthGuests[this.tick % 5]);
     }
     this.tick++;
-  });
-
-  daySubcription = context.subscribe("interval.day", () => {
-    if (this.updateFrequency.get() === UpdateFrequency.Daily) {
-      Object.keys(this.stats).forEach((stat) => {
-        const value = this.stats[stat as GuestStat].get().value;
-        if (this.stats[stat as GuestStat].get().enabled) {
-          setAllGuestStats(stat as GuestStat, value);
-        }
-      });
-    } else if (this.updateFrequency.get() === UpdateFrequency.Every2Days) {
-      const guests = map.getAllEntities("guest").filter((guest) => {
-        guest.id && guest.id % 2 === 0;
-      });
-      Object.keys(this.stats).forEach((stat) => {
-        const value = this.stats[stat as GuestStat].get().value;
-        if (this.stats[stat as GuestStat].get().enabled) {
-          setAllGuestStats(stat as GuestStat, value, guests);
-        }
-      });
-    } else if (this.updateFrequency.get() === UpdateFrequency.Weekly) {
-      const guests = map.getAllEntities("guest").filter((guest) => {
-        guest.id && guest.id % 7 === 0;
-      });
-      Object.keys(this.stats).forEach((stat) => {
-        const value = this.stats[stat as GuestStat].get().value;
-        if (this.stats[stat as GuestStat].get().enabled) {
-          setAllGuestStats(stat as GuestStat, value, guests);
-        }
-      });
-    } else if (this.updateFrequency.get() === UpdateFrequency.Monthly) {
-      const guests = map.getAllEntities("guest").filter((guest) => {
-        guest.id && guest.id % 28 === 0;
-      });
-      Object.keys(this.stats).forEach((stat) => {
-        const value = this.stats[stat as GuestStat].get().value;
-        if (this.stats[stat as GuestStat].get().enabled) {
-          setAllGuestStats(stat as GuestStat, value, guests);
-        }
-      });
-    }
   });
 
   updateValue(stat: GuestStat, value: number) {
