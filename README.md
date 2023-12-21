@@ -18,7 +18,7 @@
 Behind the scenes, each guest's stats can have values from 0-255, so I divided that by 16 to be more useful. That causes the range to be from 0-16.
 
 ### Why isn't anything showing up for Nausea <= 2 or TOILET >= 4?
-Apparently not show all values are shown if they're enough on the extremes. Energy can actually get down to 9 before registering as missing.
+Apparently not all values are shown if they're enough on the extremes. Energy can actually get down to 9 before registering as missing.
 
 ### It's causing some serious lag on my big park!
 I'd like to offer some help, so anything more you could share with me would be great. Find me in the OpenRCT discord @ltsSmitty
