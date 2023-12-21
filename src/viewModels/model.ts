@@ -15,8 +15,8 @@ export type StatParam = {
 };
 
 export enum UpdateFrequency {
-  EveryTick,
-  EveryOtherTick,
+  //   EveryTick,
+  //   EveryOtherTick,
   EveryFiveTicks,
   Daily,
   Every2Days,
@@ -79,9 +79,9 @@ export class Model {
   lastBiggestGuestId = 0;
 
   daySubcription = context.subscribe("interval.day", () => {
-    if (date.day % 2 == 0) {
-      this.initArrays();
-    }
+    // if (date.day % 2 == 0) {
+    //   this.initArrays();
+    // }
 
     // add any new guests to the arrays each day
     this.guests = map.getAllEntities("guest").map((guest) => {
@@ -116,12 +116,17 @@ export class Model {
   });
 
   tickSubcription = context.subscribe("interval.tick", () => {
-    if (this.updateFrequency.get() === UpdateFrequency.EveryTick) {
-      this.updateGuestStats(this.guests);
-    } else if (this.updateFrequency.get() === UpdateFrequency.EveryOtherTick) {
-      this.updateGuestStats(this.everyOtherGuests[this.tick % 2]);
-    } else if (this.updateFrequency.get() === UpdateFrequency.EveryFiveTicks) {
-      this.updateGuestStats(this.everyFifthGuests[this.tick % 5]);
+    // if (this.updateFrequency.get() === UpdateFrequency.EveryTick) {
+    //   this.updateGuestStats(this.guests);
+    // } else if (this.updateFrequency.get() === UpdateFrequency.EveryOtherTick) {
+    //   this.updateGuestStats(this.everyOtherGuests[this.tick % 2]);
+    // } else
+    if (this.updateFrequency.get() === UpdateFrequency.EveryFiveTicks) {
+      console.log(this.everyFifthGuests);
+      const thisSlice = this.everyFifthGuests[this.tick % 5];
+      console.log("thisSlice", thisSlice.length);
+
+      this.updateGuestStats(thisSlice);
     }
     this.tick++;
   });

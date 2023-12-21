@@ -9,7 +9,7 @@ function openWindow(model: Model) {
       "The version of OpenRCT2 you are currently playing is too old for this plugin.";
 
     ui.showError(title, message);
-    console.log(`[Wet Paint] ${title} ${message}`);
+    console.log(`[Consistent Guest Stats] ${title} ${message}`);
     return;
   }
 

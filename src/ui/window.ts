@@ -126,5 +126,6 @@ const frequencyLabelSpinner = (model: Model) => {
     onChange: (value) => {
       model.updateFrequencyValue(value);
     },
+    // disabled: true,
   });
 };
