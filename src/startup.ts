@@ -2,7 +2,7 @@ import { mainWindow } from "./ui/window";
 import { Model } from "./viewModels/model";
 
 function openWindow(model: Model) {
-  if (context.apiVersion < 59) {
+  if (context.apiVersion < 37) {
     // 59 => https://github.com/OpenRCT2/OpenRCT2/pull/17821
     const title = "Please update the game!";
     const message =

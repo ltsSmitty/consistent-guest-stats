@@ -149,9 +149,13 @@ export class Model {
     this.tick++;
   });
 
-  saveSubcription = context.subscribe("map.save", () => {
-    this.saveValues();
-  });
+  // only save if the api supports it
+  saveSubcription =
+    context.apiVersion >= 70
+      ? context.subscribe("map.save", () => {
+          this.saveValues();
+        })
+      : null;
 
   updateValue(stat: GuestStat, value: number) {
     this.stats[stat].set({ ...this.stats[stat].get(), value });
