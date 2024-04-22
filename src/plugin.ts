@@ -4,7 +4,7 @@ import { startup } from "./startup";
 
 registerPlugin({
   name: "Consistent Guest Stats",
-  version: "1.0",
+  version: "1.0.2",
   authors: ["ltsSmitty"],
   type: "remote",
   licence: "MIT",
