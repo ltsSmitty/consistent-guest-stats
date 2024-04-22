@@ -3,13 +3,7 @@ import { setAllGuestStats } from "../setGuestStats";
 
 const PLUGIN_NAMESPACE = "CONSISTENT_GUEST_STATS";
 
-export type GuestStat =
-  | "happiness"
-  | "energy"
-  | "hunger"
-  | "thirst"
-  | "nausea"
-  | "toilet";
+export type GuestStat = "happiness" | "energy" | "hunger" | "thirst" | "nausea" | "toilet";
 
 export type StatParam = {
   value: number;
@@ -179,6 +173,11 @@ export class Model {
   }
 
   saveValues() {
+    // for v0.3.5 or earlier,
+    // make sure park storage is available
+    if (!context.getParkStorage) {
+      return;
+    }
     const values: PluginValues = {
       updateFrequency: this.updateFrequency.get(),
       stats: {
@@ -194,25 +193,27 @@ export class Model {
   }
 
   loadValues() {
-    const values = context
-      .getParkStorage()
-      .get<PluginValues>(`${PLUGIN_NAMESPACE}.values`);
-    if (values) {
-      this.updateFrequency.set(values.updateFrequency);
-      this.stats.happiness.set(values.stats.happiness);
-      this.stats.energy.set(values.stats.energy);
-      this.stats.hunger.set(values.stats.hunger);
-      this.stats.thirst.set(values.stats.thirst);
-      this.stats.nausea.set(values.stats.nausea);
-      this.stats.toilet.set(values.stats.toilet);
-    } else {
-      this.updateFrequency.set(defaultValues.updateFrequency);
-      this.stats.happiness.set(defaultValues.stats.happiness);
-      this.stats.energy.set(defaultValues.stats.energy);
-      this.stats.hunger.set(defaultValues.stats.hunger);
-      this.stats.thirst.set(defaultValues.stats.thirst);
-      this.stats.nausea.set(defaultValues.stats.nausea);
-      this.stats.toilet.set(defaultValues.stats.toilet);
+    // for v0.3.5 or earlier,
+    // make sure park storage is available
+    if (context.getParkStorage) {
+      const values = context.getParkStorage().get<PluginValues>(`${PLUGIN_NAMESPACE}.values`);
+      if (values) {
+        this.updateFrequency.set(values.updateFrequency);
+        this.stats.happiness.set(values.stats.happiness);
+        this.stats.energy.set(values.stats.energy);
+        this.stats.hunger.set(values.stats.hunger);
+        this.stats.thirst.set(values.stats.thirst);
+        this.stats.nausea.set(values.stats.nausea);
+        this.stats.toilet.set(values.stats.toilet);
+        return;
+      }
     }
+    this.updateFrequency.set(defaultValues.updateFrequency);
+    this.stats.happiness.set(defaultValues.stats.happiness);
+    this.stats.energy.set(defaultValues.stats.energy);
+    this.stats.hunger.set(defaultValues.stats.hunger);
+    this.stats.thirst.set(defaultValues.stats.thirst);
+    this.stats.nausea.set(defaultValues.stats.nausea);
+    this.stats.toilet.set(defaultValues.stats.toilet);
   }
 }
