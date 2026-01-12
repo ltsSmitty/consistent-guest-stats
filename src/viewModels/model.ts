@@ -14,6 +14,7 @@ export enum UpdateFrequency {
   EveryTick,
   EveryOtherTick,
   EveryFiveTicks,
+  EveryFortyTicks,
   Daily,
   Every2Days,
   Weekly,
@@ -70,6 +71,7 @@ export class Model {
   guests: GuestID[] = [];
   everyOtherGuests: GuestID[][] = new Array(2);
   everyFifthGuests: GuestID[][] = new Array(5);
+  everyFortiethGuests: GuestID[][] = new Array(40);
   everySeventhGuests: GuestID[][] = new Array(7);
   everyTwentyEighthGuests: GuestID[][] = new Array(28);
 
@@ -79,6 +81,9 @@ export class Model {
     }
     for (let i = 0; i < 5; i++) {
       this.everyFifthGuests[i] = [];
+    }
+    for (let i = 0; i < 40; i++) {
+      this.everyFortiethGuests[i] = [];
     }
     for (let i = 0; i < 7; i++) {
       this.everySeventhGuests[i] = [];
@@ -114,6 +119,7 @@ export class Model {
       if (!id) return;
       this.everyOtherGuests[id % 2].push(id);
       this.everyFifthGuests[id % 5].push(id);
+      this.everyFortiethGuests[id % 40].push(id);
       this.everySeventhGuests[id % 7].push(id);
       this.everyTwentyEighthGuests[id % 28].push(id);
     });
@@ -144,6 +150,10 @@ export class Model {
     } else if (this.updateFrequency.get() === UpdateFrequency.EveryFiveTicks) {
       const thisSlice = this.everyFifthGuests[this.tick % 5];
       console.log(`tick group ${this.tick % 5}`);
+      this.updateGuestStats(thisSlice);
+    } else if (this.updateFrequency.get() === UpdateFrequency.EveryFortyTicks) {
+      const thisSlice = this.everyFortiethGuests[this.tick % 40];
+      console.log(`tick group ${this.tick % 40}`);
       this.updateGuestStats(thisSlice);
     }
     this.tick++;

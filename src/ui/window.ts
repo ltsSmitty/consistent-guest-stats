@@ -18,6 +18,7 @@ const UpdateFrequencyKeys: string[] = [
   "Every tick",
   "Every other tick",
   "Every five ticks",
+  "Every IRL second",
   "Daily",
   "Every 2 days",
   "Weekly",
