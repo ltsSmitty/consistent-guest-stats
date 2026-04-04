@@ -1,5 +1,9 @@
 import { store, type WritableStore } from "openrct2-flexui";
-import { setAllGuestStats } from "../setGuestStats";
+import {
+	applyGuestStatUpdates,
+	type GuestStatUpdate,
+	setAllGuestStats,
+} from "../setGuestStats";
 
 const PLUGIN_NAMESPACE = "CONSISTENT_GUEST_STATS";
 
@@ -95,6 +99,9 @@ export class Model {
 	/** Set when the map is about to change; cleared after {@link rebuildGuestListsFromMap} on the next tick. */
 	private needsGuestListResync = false;
 
+	/** In-game year we last ran {@link compactGuestIndex}; refreshed on full map rebuild. */
+	private lastGuestCompactYear = 0;
+
 	tick = 0;
 
 	guests: GuestID[] = [];
@@ -140,6 +147,7 @@ export class Model {
 			this.distributeGuestToBuckets(id);
 		}
 		this.needsGuestListResync = false;
+		this.lastGuestCompactYear = date.year;
 	};
 
 	private distributeGuestToBuckets(id: GuestID): void {
@@ -157,11 +165,10 @@ export class Model {
 	}
 
 	/**
-	 * There is no `guest.left` (or similar) script hook in OpenRCT2 — only `guest.generation`.
-	 * Once per in-game day, drop departed guests and rebuild bucket lists so arrays stay bounded.
+	 * There is no `guest.left` script hook in OpenRCT2 — only `guest.generation`.
+	 * Called at most once per in-game year to drop departed guests and rebuild bucket lists.
 	 */
 	private compactGuestIndex(): void {
-		console.log("compactGuestIndex");
 		const alive: GuestID[] = [];
 		const seen: { [id: number]: true } = Object.create(null);
 		let dropped = 0;
@@ -197,14 +204,26 @@ export class Model {
 		if (!this.anyStatEnabled()) {
 			return;
 		}
-		GUEST_STATS.forEach((stat) => {
-			if (!this.stats[stat].get().enabled) return;
-			setAllGuestStats(stat, this.stats[stat].get().value, guestIds);
-		});
+		const updates: GuestStatUpdate[] = [];
+		for (let s = 0; s < GUEST_STATS.length; s++) {
+			const stat = GUEST_STATS[s];
+			if (!this.stats[stat].get().enabled) continue;
+			updates.push({ stat, value: this.stats[stat].get().value });
+		}
+		if (updates.length === 0) {
+			return;
+		}
+		console.log(
+			`Updating ${updates.length} stat(s) for ${guestIds.length} guest id(s) (one pass)`,
+		);
+		applyGuestStatUpdates(updates, guestIds);
 	};
 
 	daySubcription = context.subscribe("interval.day", () => {
-		this.compactGuestIndex();
+		if (date.year !== this.lastGuestCompactYear) {
+			this.compactGuestIndex();
+			this.lastGuestCompactYear = date.year;
+		}
 		if (this.updateFrequency.get() === UpdateFrequency.Daily) {
 			this.updateGuestStats(this.guests);
 		} else if (this.updateFrequency.get() === UpdateFrequency.Every2Days) {
@@ -224,7 +243,7 @@ export class Model {
 			this.updateGuestStats(this.guests);
 		} else if (this.updateFrequency.get() === UpdateFrequency.EveryOtherTick) {
 			const thisSlice = this.everyOtherGuests[this.tick % 2];
-			console.log(`tick group ${this.tick % 2}`);
+			console.log(`tick group ${this.tick % 2}, ${thisSlice.length}`);
 			this.updateGuestStats(thisSlice);
 		} else if (this.updateFrequency.get() === UpdateFrequency.EveryFiveTicks) {
 			const thisSlice = this.everyFifthGuests[this.tick % 5];
